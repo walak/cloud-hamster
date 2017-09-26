@@ -6,12 +6,20 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from os.path import join
 from os import walk, path
 
+import logging
+
+
+logging.basicConfig(format='%(asctime)-15s [ %(name)s ] %(message)s', level=logging.WARN)
+log = logging.getLogger("Cloud Hamster")
+log.setLevel(logging.INFO)
+
 CONFIG = {}
 
 
 def load_config(path):
     with open(path) as file_handler:
         config = load(file_handler)
+        log.info("Loaded config from %s file, %d entries" % (path, len(config)))
         return config
 
 
