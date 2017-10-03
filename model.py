@@ -1,4 +1,4 @@
-from json import load
+from json import load, dump
 
 
 class OAuthSettings:
@@ -22,6 +22,10 @@ class OAuthSettings:
                    client_secret=d['client_secret'],
                    scope=d['scope'],
                    redirect_uri=d['redirect_uri'])
+
+    def save_to_file(self, path):
+        with open(path) as file:
+            dump(self.to_dict(), path)
 
     @staticmethod
     def load_from_file(path):
