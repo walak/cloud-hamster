@@ -1,10 +1,10 @@
-from googleapiclient.discovery import build
-from oauth2client.client import OAuth2WebServerFlow
+from googleapiclient.discovery import build, Resource
+from oauth2client.client import OAuth2WebServerFlow, Credentials
 from oauth2client.tools import argparser
 
 from model import OAuthSettings
 from json import dumps, loads, load, dump
-from simple_backup import CONFIG, merge_config
+from simple_backup import CONFIG, merge_config, load_config
 from sys import argv
 
 
@@ -25,7 +25,7 @@ def authorize(config_path, app_settings_path):
     CONFIG['credentials'] = credentials_dict
     merge_config(config_path)
 
-    service = build('drive', 'v3', credentials=credentials, cache_discovery=False)
+    service = build_service(credentials)
     result = service.about().get(fields="user").execute()
     return {
         "user": result['user']['displayName'],
@@ -33,5 +33,41 @@ def authorize(config_path, app_settings_path):
     }
 
 
-logged_user = authorize(argv[1], argv[2])
-print("Obtained credentials for %s(%s)\nYou can use the app now." % (logged_user['user'],logged_user['email']))
+def build_service(credentials):
+    return build('drive', 'v3', credentials=credentials, cache_discovery=False)
+
+
+def get_credentials_from_config():
+    credentials_string = dumps(CONFIG['credentials'])
+    return Credentials.new_from_json(credentials_string)
+
+
+def validate():
+    credentials = get_credentials_from_config()
+    service = build_service(credentials)
+    result = service.about().get(fields="user").execute()
+    print(result)
+
+
+def _print_user_from_response(result):
+    name = result['user']['displayName']
+    email = result['user']['emailAddress']
+    print("Obtained credentials for %s(%s)\nYou can use the app now." % (name, email))
+
+
+def refresh_token_and_store(path):
+    mutable_credentials = get_credentials_from_config()
+    credentials_in_config = get_credentials_from_config()
+    service = build_service(mutable_credentials)
+    result = service.about().get(fields="user").execute()
+    if not credentials_in_config.access_token == mutable_credentials.access_token:
+        CONFIG['credentials'] = loads(mutable_credentials.to_json())
+        merge_config(path)
+        return True
+    else:
+        return False
+
+
+if __name__ == "__main__":
+    load_config(argv[1])
+    authorize(argv[1], argv[2])
