@@ -1,11 +1,12 @@
-from googleapiclient.discovery import build, Resource
+from json import dumps, loads
+from sys import argv
+
+from googleapiclient.discovery import build
 from oauth2client.client import OAuth2WebServerFlow, Credentials
 from oauth2client.tools import argparser
 
 from model import OAuthSettings
-from json import dumps, loads, load, dump
 from simple_backup import CONFIG, merge_config, load_config
-from sys import argv
 
 
 def authorize(config_path, app_settings_path):
