@@ -1,3 +1,4 @@
+import logging
 from json import dumps
 
 from googleapiclient.discovery import build
@@ -6,6 +7,11 @@ from oauth2client.client import Credentials
 
 from config import get_config
 from model import Quota
+
+log = logging.getLogger("Google Drive")
+log.setLevel(logging.INFO)
+
+BACKUP_FILTER = 'name contains "backup_" and mimeType="application/zip"'
 
 
 def get_credentials_from_config():
@@ -28,3 +34,13 @@ def upload_file(service, path, remote_name):
     media.stream()
     result = service.files().create(body=file_meta, media_body=media, fields="id").execute()
     return result
+
+
+def remove_file(service, file_id):
+    result = service.files().delete(fileId=file_id).execute()
+    return result
+
+
+def list_files(service, filter):
+    files = service.files().list(q=filter).execute()
+    return files

@@ -7,8 +7,8 @@ from config import get_config
 from base64 import b64encode
 
 
-def get_date():
-    return datetime.today().strftime('%Y%m%d')
+def get_date_and_time():
+    return datetime.today().strftime('%Y%m%d%H%M%S')
 
 
 def str_to_base64(s):
@@ -29,4 +29,4 @@ def get_temp_file_path(filename):
 
 
 def generate_backup_name(path):
-    return "backup_%s-%sarchive.zip" % (get_date(), str_to_base64(str(path)))
+    return "backup_%s_%s_cloudhamster.zip" % (get_date_and_time(), str_to_base64(str(path)))

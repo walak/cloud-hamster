@@ -6,7 +6,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from config import load_config, get_config
 from files import get_temp_file_path, get_temp_file, generate_backup_name
-from google_drive import build_service, get_credentials_from_config, get_quota, upload_file
+from google_drive import build_service, get_credentials_from_config, get_quota, upload_file, list_files, BACKUP_FILTER, \
+    remove_file
 
 logging.basicConfig(format='%(asctime)-15s [ %(name)s ] %(message)s', level=logging.WARN)
 log = logging.getLogger("Cloud Hamster")
@@ -30,6 +31,30 @@ def validate_google_account():
                 argv[1], "app.json"))
 
 
+def file_to_int(file):
+    name = file['name']
+    created_at = name.split("_")[1]
+    return int(created_at)
+
+
+def found_oldest_backups(files):
+    sorted_files = sorted(files, key=lambda f: file_to_int(f), reverse=True)
+    return sorted_files[10:]
+
+
+def check_current_backups(service):
+    result = list_files(service, filter=BACKUP_FILTER)
+    number_of_backups = len(result['files'])
+    if number_of_backups <= 10:
+        log.info("Found [ %d ] previous backups" % number_of_backups)
+    else:
+        log.info("Found more than 10 backups... removing oldest copies")
+        files_to_remove = found_oldest_backups(result['files'])
+        for remote_file in files_to_remove:
+            result = remove_file(service, remote_file['id'])
+            print(result)
+
+
 load_config(argv[1])
 
 validate_google_account()
@@ -42,6 +67,9 @@ print(quota.to_pretty_string())
 
 tmp_file = get_temp_file()
 tmp_path = get_temp_file_path(tmp_file)
+
+check_current_backups(google_api)
+
 compress_folder(get_config()['backup_directory'], tmp_path)
 
 backup_name = generate_backup_name(get_config()['backup_directory'])
