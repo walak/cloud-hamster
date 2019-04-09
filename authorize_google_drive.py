@@ -5,8 +5,8 @@ from googleapiclient.discovery import build
 from oauth2client.client import OAuth2WebServerFlow, Credentials
 from oauth2client.tools import argparser
 
+from config import get_config, save_config, load_config
 from model import OAuthSettings
-from simple_backup import CONFIG, merge_config, load_config
 
 
 def authorize(config_path, app_settings_path):
@@ -23,8 +23,8 @@ def authorize(config_path, app_settings_path):
     credentials = flow.step2_exchange(code=code)
 
     credentials_dict = loads(credentials.to_json())
-    CONFIG['credentials'] = credentials_dict
-    merge_config(config_path)
+    get_config()['credentials'] = credentials_dict
+    save_config(config_path)
 
     service = build_service(credentials)
     result = service.about().get(fields="user").execute()
