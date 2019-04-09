@@ -10,7 +10,6 @@ from model import OAuthSettings
 
 
 def authorize(config_path, app_settings_path):
-    flags = argparser.parse_args(["--noauth_local_webserver"])
     settings = OAuthSettings.load_from_file(app_settings_path)
     flow = OAuth2WebServerFlow(client_id=settings.client_id,
                                client_secret=settings.client_secret,
@@ -39,7 +38,7 @@ def build_service(credentials):
 
 
 def get_credentials_from_config():
-    credentials_string = dumps(CONFIG['credentials'])
+    credentials_string = dumps(get_config()['credentials'])
     return Credentials.new_from_json(credentials_string)
 
 
@@ -62,8 +61,8 @@ def refresh_token_and_store(path):
     service = build_service(mutable_credentials)
     result = service.about().get(fields="user").execute()
     if not credentials_in_config.access_token == mutable_credentials.access_token:
-        CONFIG['credentials'] = loads(mutable_credentials.to_json())
-        merge_config(path)
+        get_config()['credentials'] = loads(mutable_credentials.to_json())
+        save_config(path)
         return True
     else:
         return False
